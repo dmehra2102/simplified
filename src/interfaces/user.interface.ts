@@ -26,3 +26,10 @@ export type RegisterUserInput = {
   organisationName: string;
   organisationEmail: string;
 };
+
+export type UpdateUserProfileInput = {
+  userName?: string;
+  profession?: string;
+  profilePic?: string;
+  organisationName?: string;
+};

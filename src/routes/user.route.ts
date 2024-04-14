@@ -1,6 +1,6 @@
 import { UserController } from "@/controllers";
 import { Routes } from "@/interfaces";
-import { ensureAuthenticated } from "@/middlewares";
+import { ensureAuthenticated, ensureAuthorized } from "@/middlewares";
 import { Router } from "express";
 
 class UserRoute implements Routes {
@@ -13,7 +13,8 @@ class UserRoute implements Routes {
   }
 
   private initiailizeRoutes() {
-    
+    this.router.get(`${this.path}/all`, ensureAuthenticated, ensureAuthorized, this.userController.getUsersList);
+    this.router.get(`${this.path}/:userId`, ensureAuthenticated, ensureAuthorized, this.userController.getUserById);
   }
 }
 

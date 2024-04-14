@@ -34,6 +34,7 @@
       "*.{js,ts}": "eslint"
    },
    "dependencies": {
+      "@getbrevo/brevo": "^2.0.0-beta.4",
       "bcrypt": "^5.1.1",
       "compression": "^1.7.4",
       "connect-mongodb-session": "^5.0.0",

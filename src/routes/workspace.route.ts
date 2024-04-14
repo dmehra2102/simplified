@@ -1,6 +1,6 @@
 import { WorkspaceController } from "@/controllers";
 import { Routes } from "@/interfaces";
-import { ensureAuthenticated, ensureAuthorized } from "@/middlewares";
+import { ensureAuthenticated, ensureAuthorized, ensureWorkspaceAdmin, ensureWorkspaceAuthorized } from "@/middlewares";
 import { Router } from "express";
 
 class WorkspaceRoutes implements Routes {
@@ -13,12 +13,20 @@ class WorkspaceRoutes implements Routes {
   }
 
   private initiailizeRoutes() {
+    this.router.get(`${this.path}/all`, ensureAuthenticated, this.worspaceController.getAllWorkspace);
+    this.router.get(`${this.path}/:workspaceId`, ensureAuthenticated, ensureWorkspaceAuthorized, this.worspaceController.getWorkSpaceById);
     this.router.post(`${this.path}/create`, ensureAuthenticated, ensureAuthorized, this.worspaceController.createWorkspace);
-    this.router.put(`${this.path}/:workspaceId/add-members`, ensureAuthenticated, ensureAuthorized, this.worspaceController.addMembers);
+    this.router.put(
+      `${this.path}}/:workspaceId/remove-members`,
+      ensureAuthenticated,
+      ensureWorkspaceAdmin,
+      this.worspaceController.removeMembers,
+    );
+    this.router.put(`${this.path}/:workspaceId/add-members`, ensureAuthenticated, ensureWorkspaceAdmin, this.worspaceController.addMembers);
     this.router.put(
       `${this.path}/:workspaceId/update-role/:memberId`,
       ensureAuthenticated,
-      ensureAuthorized,
+      ensureWorkspaceAdmin,
       this.worspaceController.updateWorkspaceRole,
     );
   }

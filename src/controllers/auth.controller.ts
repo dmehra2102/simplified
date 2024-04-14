@@ -5,11 +5,14 @@ import { COOKIE_DOMAIN } from "@/config";
 import { MongooseError } from "mongoose";
 import { NextFunction, Request, Response } from "express";
 import { RegisterUserInput, UserDocument, UserRequest } from "@/interfaces";
+import { EmailService } from "@/services";
+import { accountCreatedSucessfullyTemplateContent } from "@/services/email/template/accountCreatedSuccessfully";
 
 class AuthController {
   public registerUser = async (req: Request, res: Response) => {
     try {
-      const { email, organisationEmail, organisationName, password, profession, userName, userRole, profilePic }: RegisterUserInput = req.body;
+      const { email, organisationEmail, organisationName, password, profession, userName, userRole, profilePic }: RegisterUserInput =
+        req.body;
 
       if (!email || !userName || !password || !profession || !organisationEmail || !organisationName) {
         return res.status(400).send({ error: true, message: "Mandatory fields are missing!" });
@@ -34,6 +37,17 @@ class AuthController {
 
       await newUser.save();
       logger.info(`Success in authController.register. New User with email : ${email} has been registered successfully.`);
+
+      const emailService = new EmailService();
+
+      logger.info(`Started sending registration successfull email to ${newUser.email}.`);
+      emailService.sendTransactionalEmail({
+        subject: "Hurray !! Account created successfully",
+        htmlContent: accountCreatedSucessfullyTemplateContent,
+        to: [{ name: newUser.userName, email: newUser.email }],
+        params: { parameter: "My param value", subject: "New Subject" },
+      });
+      logger.info(`Finished sending registration successfull email to ${newUser.email}.`);
 
       return res.status(200).send({
         success: true,

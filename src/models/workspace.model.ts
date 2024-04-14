@@ -1,6 +1,6 @@
 import { UserRole } from "@/enums";
-import { WorkspaceDocument, WorkspaceMemberDocument, WorkspaceMemberInterface, WorkspaceModelInterface } from "@/interfaces";
 import { model, Schema } from "mongoose";
+import { WorkspaceDocument, WorkspaceMemberDocument, WorkspaceMemberInterface, WorkspaceModelInterface } from "@/interfaces";
 
 const workspaceMemberSchema = new Schema<WorkspaceMemberDocument, WorkspaceMemberInterface>(
   {
@@ -23,7 +23,7 @@ const workspaceSchema = new Schema<WorkspaceDocument, WorkspaceModelInterface>(
       ref: "User",
       required: true,
     },
-    workspaceMembers: [workspaceMemberSchema],
+    workspaceMembers: [{ type: workspaceMemberSchema, required: true }],
     workspaceImage: { type: String },
   },
   { timestamps: true, versionKey: false },
