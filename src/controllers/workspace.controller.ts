@@ -3,7 +3,7 @@ import { UserRole } from "@/enums";
 import { Response } from "express";
 import { WorkspaceModel } from "@/models";
 import mongoose, { MongooseError } from "mongoose";
-import { CreateWorkspaceInput, UserRequest } from "@/interfaces";
+import { CreateWorkspaceInput, UpdateWorkspaceInput, UserRequest } from "@/interfaces";
 
 class WorkspaceController {
   public createWorkspace = async (req: UserRequest, res: Response) => {
@@ -91,8 +91,8 @@ class WorkspaceController {
         { $addToSet: { workspaceMembers: { $each: members } } },
         { new: true },
       )
-        .lean()
-        .exec();
+        .select("workspaceName workspaceMembers")
+        .populate({ path: "workspaceMembers" });
 
       if (!updatedWorkpace) {
         return res.status(400).send({ error: true, message: "Failed to update workspace members" });
@@ -182,6 +182,30 @@ class WorkspaceController {
       }
 
       return res.status(200).send({ success: true, message: "Members removed successfully!" });
+    } catch (error) {
+      if (error instanceof MongooseError) {
+        return res.status(400).send({ error: true, message: error.message });
+      } else {
+        return res.status(500).send({ error: true, message: `Internal server error : ${error.message}` });
+      }
+    }
+  };
+
+  public updateWorkspace = async (req: UserRequest, res: Response) => {
+    try {
+      const { workspaceId } = req.params;
+      const { workspaceName, workspaceDescription, workspaceImage }: UpdateWorkspaceInput = req.body;
+      const updatedDetails: UpdateWorkspaceInput = {};
+
+      if (workspaceName) updatedDetails.workspaceName = workspaceName;
+      if (workspaceImage) updatedDetails.workspaceImage = workspaceImage;
+      if (workspaceDescription) updatedDetails.workspaceDescription = workspaceDescription;
+
+      const updatedWorkspae = await WorkspaceModel.findByIdAndUpdate(workspaceId, updatedDetails, { new: true });
+
+      if (!updatedWorkspae) return res.status(400).send({ error: true, message: "Failed to update workspace!" });
+
+      return res.status(201).send({ success: true, message: "Workspace Updated Successfully!" });
     } catch (error) {
       if (error instanceof MongooseError) {
         return res.status(400).send({ error: true, message: error.message });

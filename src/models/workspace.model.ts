@@ -1,6 +1,19 @@
 import { UserRole } from "@/enums";
 import { model, Schema } from "mongoose";
-import { WorkspaceDocument, WorkspaceMemberDocument, WorkspaceMemberInterface, WorkspaceModelInterface } from "@/interfaces";
+import {
+  TicketStageDocument,
+  TicketStageInterface,
+  WorkspaceDocument,
+  WorkspaceMemberDocument,
+  WorkspaceMemberInterface,
+  WorkspaceModelInterface,
+} from "@/interfaces";
+import { DefaultTicketStages } from "@/constants";
+
+const TicketStageSchema = new Schema<TicketStageDocument, TicketStageInterface>(
+  { stageName: { type: String, required: true, unique: true }, stageDescription: { type: String } },
+  { timestamps: false, versionKey: false, _id: false },
+);
 
 const workspaceMemberSchema = new Schema<WorkspaceMemberDocument, WorkspaceMemberInterface>(
   {
@@ -11,7 +24,7 @@ const workspaceMemberSchema = new Schema<WorkspaceMemberDocument, WorkspaceMembe
       default: UserRole.TEAM_MEMBER,
     },
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false, _id: false },
 );
 
 const workspaceSchema = new Schema<WorkspaceDocument, WorkspaceModelInterface>(
@@ -23,8 +36,10 @@ const workspaceSchema = new Schema<WorkspaceDocument, WorkspaceModelInterface>(
       ref: "User",
       required: true,
     },
-    workspaceMembers: [{ type: workspaceMemberSchema, required: true }],
+    workspaceMembers: { type: [{ type: workspaceMemberSchema, required: true }], default: [] },
     workspaceImage: { type: String },
+    ticketStages: { type: [{ type: TicketStageSchema, required: true }], default: DefaultTicketStages },
+    analysis: { type: Schema.Types.Mixed },
   },
   { timestamps: true, versionKey: false },
 );

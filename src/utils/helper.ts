@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
-import { WorkspaceModel } from "@/models";
+import { UserModel, WorkspaceModel } from "@/models";
+import { NextFunction } from "express";
 
 export const isPasswordMatched = async (password: string, userPassword: string) => {
   const isCorrectPassword = await bcrypt.compare(password, userPassword);

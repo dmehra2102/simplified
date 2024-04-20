@@ -18,7 +18,7 @@ class AuthController {
         return res.status(400).send({ error: true, message: "Mandatory fields are missing!" });
       }
 
-      const existingUser = await UserModel.findOne({ email }).lean().exec();
+      const existingUser = await UserModel.exists({ email });
       if (existingUser) {
         return res.status(400).send({ error: true, message: "User already exists with the same email." });
       }
@@ -41,7 +41,8 @@ class AuthController {
       const emailService = new EmailService();
 
       logger.info(`Started sending registration successfull email to ${newUser.email}.`);
-      emailService.sendTransactionalEmail({
+
+      await emailService.sendTransactionalEmail({
         subject: "Hurray !! Account created successfully",
         htmlContent: accountCreatedSucessfullyTemplateContent,
         to: [{ name: newUser.userName, email: newUser.email }],
@@ -118,7 +119,7 @@ class AuthController {
   public getUserDetail = async (req: UserRequest, res: Response) => {
     try {
       const { _id } = req.user;
-      const existingUser = await UserModel.findById(_id).select("_id userName email organisationName").lean().exec();
+      const existingUser = await UserModel.findById(_id, "userName email organisationName").lean().exec();
 
       if (!existingUser) return res.status(404).send({ error: true, message: "User not found" });
 

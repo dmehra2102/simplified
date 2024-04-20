@@ -1,5 +1,6 @@
 import { UserRole } from "@/enums";
 import { Document, Model } from "mongoose";
+import { WorkspaceDocument } from "./workspace.interface";
 
 export interface UserInterface {
   email: string;
@@ -11,6 +12,7 @@ export interface UserInterface {
   organisationName: string;
   organisationEmail: string;
   isDeactivated: boolean;
+  workspaces: WorkspaceDocument[];
 }
 
 export interface UserDocument extends Document, UserInterface {}
