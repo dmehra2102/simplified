@@ -29,6 +29,12 @@ class WorkspaceRoutes implements Routes {
       ensureWorkspaceAdmin,
       this.worspaceController.updateWorkspaceRole,
     );
+    this.router.put(
+      `${this.path}/remove/:workspaceId`,
+      ensureAuthenticated,
+      ensureWorkspaceAdmin,
+      this.worspaceController.removeWorkspaceById,
+    );
   }
 }
 

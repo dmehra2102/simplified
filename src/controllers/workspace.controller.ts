@@ -3,12 +3,12 @@ import { UserRole } from "@/enums";
 import { Response } from "express";
 import { WorkspaceModel } from "@/models";
 import mongoose, { MongooseError } from "mongoose";
-import { CreateWorkspaceInput, UpdateWorkspaceInput, UserRequest } from "@/interfaces";
+import { CreateWorkspaceInput, UpdateWorkspaceInput, UserRequest, WorkspaceDocument } from "@/interfaces";
 
 class WorkspaceController {
   public createWorkspace = async (req: UserRequest, res: Response) => {
     try {
-      const { _id } = req.user;
+      const { _id, organisationEmail } = req.user;
       const { workspaceName, workspaceDescription, workspaceImage, workspaceMembers }: CreateWorkspaceInput = req.body;
 
       if (!workspaceName) return res.status(400).send({ error: true, message: "Mandatory fields are missing!" });
@@ -19,6 +19,7 @@ class WorkspaceController {
         workspaceImage,
         workspaceDescription,
         workspaceMembers: [...(workspaceMembers || []), { memberInfo: _id, memberWorkspaceRole: UserRole.ADMIN }],
+        organisationEmail,
       });
 
       return res.status(201).send({ success: true, message: "Workspace created successfully!", data: { workspaceId: newWorkspace._id } });
@@ -34,7 +35,9 @@ class WorkspaceController {
   public getWorkSpaceById = async (req: UserRequest, res: Response) => {
     try {
       const { workspaceId } = req.params;
-      const workspace = await WorkspaceModel.findById(workspaceId).lean().exec();
+      const workspace = await WorkspaceModel.findOne({ _id: workspaceId, isDeleted: { $ne: true } })
+        .lean()
+        .exec();
 
       if (!workspace) return res.status(404).send({ error: true, message: "Oops! Workspace not found." });
 
@@ -50,13 +53,24 @@ class WorkspaceController {
 
   public getAllWorkspace = async (req: UserRequest, res: Response) => {
     try {
-      const { _id } = req.user;
+      const { _id, userRole, organisationEmail } = req.user;
+      let workspaces: WorkspaceDocument[];
 
-      const workspaces = await WorkspaceModel.find({
-        workspaceMembers: { $elemMatch: { memberInfo: _id } },
-      })
-        .lean()
-        .exec();
+      if ([UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(userRole)) {
+        workspaces = await WorkspaceModel.find({
+          organisationEmail,
+          isDeleted: { $ne: true },
+        })
+          .lean()
+          .exec();
+      } else {
+        workspaces = await WorkspaceModel.find({
+          workspaceMembers: { $elemMatch: { memberInfo: _id } },
+          isDeleted: { $ne: true },
+        })
+          .lean()
+          .exec();
+      }
 
       if (!workspaces.length) return res.status(404).send({ success: true, message: "You are not a part of any workspace yet." });
       return res.status(200).send({ success: true, data: workspaces });
@@ -76,7 +90,11 @@ class WorkspaceController {
 
       if (!members || !members.length) return res.status(400).send({ error: true, message: "Select at least one member!" });
 
-      const existingWorkspace = await WorkspaceModel.findOne({ _id: workspaceId, workspaceMembers: { $in: [req.user._id] } })
+      const existingWorkspace = await WorkspaceModel.findOne({
+        _id: workspaceId,
+        isDeleted: { $ne: true },
+        workspaceMembers: { $in: [req.user._id] },
+      })
         .lean()
         .exec();
       if (!existingWorkspace) {
@@ -125,6 +143,7 @@ class WorkspaceController {
 
       const existingWorkspace = await WorkspaceModel.findOne({
         _id: workspaceId,
+        isDeleted: { $ne: true },
         "workspaceMembers.memberInfo": { $all: [req.user._id, memberObjectId] },
       })
         .lean()
@@ -134,7 +153,7 @@ class WorkspaceController {
         return res.status(401).send({
           error: true,
           message:
-            "Permission denied. Either the workspace does not exist or you or member you are trying to add are not a member of the workspace.",
+            "Permission denied. The requested workspace either does not exist or the member you are trying to update is not associated with the workspace.",
         });
       }
 
@@ -167,8 +186,8 @@ class WorkspaceController {
 
       if (!members || !members.length) return res.status(400).send({ error: true, message: "Select at least one member!" });
 
-      const updatedWorkspace = await WorkspaceModel.findByIdAndUpdate(
-        workspaceId,
+      const updatedWorkspace = await WorkspaceModel.findOneAndUpdate(
+        { _id: workspaceId, isDeleted: { $ne: true } },
         {
           $pullAll: { workspaceMembers: { memberInfo: { $in: members } } },
         },
@@ -201,11 +220,36 @@ class WorkspaceController {
       if (workspaceImage) updatedDetails.workspaceImage = workspaceImage;
       if (workspaceDescription) updatedDetails.workspaceDescription = workspaceDescription;
 
-      const updatedWorkspae = await WorkspaceModel.findByIdAndUpdate(workspaceId, updatedDetails, { new: true });
+      const updatedWorkspace = await WorkspaceModel.findOneAndUpdate({ _id: workspaceId, isDeleted: { $ne: true } }, updatedDetails, {
+        new: true,
+      })
+        .lean()
+        .exec();
 
-      if (!updatedWorkspae) return res.status(400).send({ error: true, message: "Failed to update workspace!" });
+      if (!updatedWorkspace) return res.status(400).send({ error: true, message: "Failed to update workspace!" });
 
       return res.status(201).send({ success: true, message: "Workspace Updated Successfully!" });
+    } catch (error) {
+      if (error instanceof MongooseError) {
+        return res.status(400).send({ error: true, message: error.message });
+      } else {
+        return res.status(500).send({ error: true, message: `Internal server error : ${error.message}` });
+      }
+    }
+  };
+
+  public removeWorkspaceById = async (req: UserRequest, res: Response) => {
+    try {
+      const { workspaceId } = req.params;
+
+      const workspace = await WorkspaceModel.findByIdAndUpdate(workspaceId, { $set: { isDeleted: { $ne: true } } })
+        .select({ _id: 1 })
+        .lean()
+        .exec();
+
+      if (!workspace) return res.status(400).send({ error: true, message: "Failed to delete workspace!" });
+
+      return res.status(201).send({ success: true, message: "Workspace deleted successfully" });
     } catch (error) {
       if (error instanceof MongooseError) {
         return res.status(400).send({ error: true, message: error.message });

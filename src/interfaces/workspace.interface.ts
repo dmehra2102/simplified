@@ -16,6 +16,8 @@ export interface WorkspaceInterface {
   ticketStages: TicketStageInterface[];
   analysis: JSON;
   workspaceMembers: WorkspaceMemberInterface[];
+  organisationEmail: string;
+  isDeleted: boolean;
 }
 
 export interface WorkspaceDocument extends WorkspaceInterface, Document {}

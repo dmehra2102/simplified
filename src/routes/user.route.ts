@@ -13,8 +13,8 @@ class UserRoute implements Routes {
   }
 
   private initiailizeRoutes() {
-    this.router.get(`${this.path}/all`, ensureAuthenticated, ensureAuthorized, this.userController.getUsersList);
     this.router.get(`${this.path}/:userId`, ensureAuthenticated, ensureAuthorized, this.userController.getUserById);
+    this.router.get(`${this.path}/all`, ensureAuthenticated, ensureAuthorized, this.userController.getOrgnisationUsersList);
   }
 }
 

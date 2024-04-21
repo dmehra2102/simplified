@@ -16,7 +16,7 @@ const userSchema = new Schema<UserDocument, UserModelInterface>(
     profession: { type: String, required: true },
     isDeactivated: { type: Boolean, default: false },
     organisationName: { type: String, required: true },
-    organisationEmail: { type: String, required: true },
+    organisationEmail: { type: String, required: true, match: /^[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/ },
     email: { type: String, unique: true, required: true },
     workspaces: { type: [{ type: Schema.Types.ObjectId, ref: "Workspace" }], default: [] },
   },

@@ -19,12 +19,11 @@ class UserController {
     }
   };
 
-  public getUsersList = async (req: UserRequest, res: Response) => {
+  public getOrgnisationUsersList = async (req: UserRequest, res: Response) => {
     try {
-      const { _id: userId } = req.user;
-      const users = await UserModel.find({ _id: { $ne: userId } })
-        .lean()
-        .exec();
+      const { _id: userId, organisationEmail } = req.user;
+      // _id: { $ne: userId }
+      const users = await UserModel.find({ organisationEmail }).lean().exec();
 
       return res.status(200).send({ success: true, data: users });
     } catch (error) {

@@ -23,9 +23,7 @@ export async function ensureWorkspaceAuthorized(req: UserRequest, res: Response,
       return next();
     }
 
-    const workspace = await WorkspaceModel.findOne({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } })
-      .lean()
-      .exec();
+    const workspace = await WorkspaceModel.exists({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } });
 
     if (!workspace) {
       return res.status(400).send({ error: true, message: "Permission denied, unauthorized user." });
@@ -47,9 +45,7 @@ export async function ensureWorkspaceAdmin(req: UserRequest, res: Response, next
       return res.status(400).send({ error: true, message: "Permission denied, unauthorized user." });
     }
 
-    const workspace = await WorkspaceModel.findOne({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } })
-      .lean()
-      .exec();
+    const workspace = await WorkspaceModel.exists({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } });
 
     if (!workspace) {
       return res.status(400).send({ error: true, message: "Permission denied, unauthorized user." });
@@ -67,9 +63,7 @@ export async function ensureWorkspaceMember(req: UserRequest, res: Response, nex
     const { _id } = req.user;
     const { workspaceId } = req.params;
 
-    const workspace = await WorkspaceModel.findOne({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } })
-      .lean()
-      .exec();
+    const workspace = await WorkspaceModel.exists({ _id: workspaceId, workspaceMembers: { $elemMatch: { memberInfo: _id } } });
 
     if (!workspace) {
       return res.status(400).send({ error: true, message: "Permission denied, unauthorized user." });

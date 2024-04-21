@@ -40,6 +40,8 @@ const workspaceSchema = new Schema<WorkspaceDocument, WorkspaceModelInterface>(
     workspaceImage: { type: String },
     ticketStages: { type: [{ type: TicketStageSchema, required: true }], default: DefaultTicketStages },
     analysis: { type: Schema.Types.Mixed },
+    organisationEmail: { type: String, required: true, match: /^[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/ },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true, versionKey: false },
 );
