@@ -1,5 +1,4 @@
 export * from "./user.interface";
-export * from "./team.interface";
 export * from "./label.interface";
 export * from "./routes.interface";
 export * from "./ticket.interface";

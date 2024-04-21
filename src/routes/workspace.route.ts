@@ -14,6 +14,12 @@ class WorkspaceRoutes implements Routes {
 
   private initiailizeRoutes() {
     this.router.get(`${this.path}/all`, ensureAuthenticated, this.worspaceController.getAllWorkspace);
+    this.router.get(
+      `${this.path}/team/:workspaceId`,
+      ensureAuthenticated,
+      ensureWorkspaceAuthorized,
+      this.worspaceController.getAllTeamMembers,
+    );
     this.router.get(`${this.path}/:workspaceId`, ensureAuthenticated, ensureWorkspaceAuthorized, this.worspaceController.getWorkSpaceById);
     this.router.post(`${this.path}/create`, ensureAuthenticated, ensureAuthorized, this.worspaceController.createWorkspace);
     this.router.put(

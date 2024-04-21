@@ -1,7 +1,7 @@
 import { logger } from "@/utils";
 import { UserRole } from "@/enums";
 import { Response } from "express";
-import { WorkspaceModel } from "@/models";
+import { UserModel, WorkspaceModel } from "@/models";
 import mongoose, { MongooseError } from "mongoose";
 import { CreateWorkspaceInput, UpdateWorkspaceInput, UserRequest, WorkspaceDocument } from "@/interfaces";
 
@@ -250,6 +250,27 @@ class WorkspaceController {
       if (!workspace) return res.status(400).send({ error: true, message: "Failed to delete workspace!" });
 
       return res.status(201).send({ success: true, message: "Workspace deleted successfully" });
+    } catch (error) {
+      if (error instanceof MongooseError) {
+        return res.status(400).send({ error: true, message: error.message });
+      } else {
+        return res.status(500).send({ error: true, message: `Internal server error : ${error.message}` });
+      }
+    }
+  };
+
+  public getAllTeamMembers = async (req: UserRequest, res: Response) => {
+    try {
+      const { workspaceId } = req.params;
+
+      const teamMembers = await WorkspaceModel.findById(workspaceId)
+        .select({ path: "workspaceMembers", select: { path: "memberInfo" } })
+        .lean()
+        .exec();
+
+      if (!teamMembers) return res.status(404).send({ error: true, message: "Workspace not found!" });
+
+      return res.status(200).send({ success: true, data: teamMembers });
     } catch (error) {
       if (error instanceof MongooseError) {
         return res.status(400).send({ error: true, message: error.message });
