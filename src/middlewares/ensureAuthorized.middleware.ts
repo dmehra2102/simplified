@@ -74,3 +74,18 @@ export async function ensureWorkspaceMember(req: UserRequest, res: Response, nex
     return next(error);
   }
 }
+
+// Middleware for user-specific actions: Accessible only to admins or the user themselves.
+export async function userSpecificAccessControl(req: UserRequest, res: Response, next: NextFunction) {
+  try {
+    const { userId } = req.params;
+    const { _id, userRole } = req.user;
+
+    if (authorizedRoles.includes(userRole)) return next();
+    if (userId === _id) return next();
+
+    return res.status(400).send({ error: true, message: "Permission denied, unauthorized user." });
+  } catch (error) {
+    return next(error);
+  }
+}
